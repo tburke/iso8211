@@ -136,6 +136,9 @@ func (header *Header) Read(file io.Reader) error {
 func (lead *LeadRecord) Read(file io.Reader) error {
 	var err error
 	err = lead.Header.Read(file)
+	if err != nil {
+		return err
+	}
 	if lead.Header.Leader_id != 'L' {
 		return errors.New("Record is not a Lead record")
 	}
