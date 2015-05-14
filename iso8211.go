@@ -5,7 +5,7 @@
 // Package iso8211 implements ISO 8211 parsing.
 // It is targeted to NOAA IHO S-57 format vector chart files.
 //
-// ISO 8211 is one of those baroque 1990's era binary file formats. 
+// ISO 8211 is one of those baroque 1990's era binary file formats.
 //   file: LeadRecord, DataRecord...
 //   Record : Header, data
 //   LeadRecord : Header, FieldType...
