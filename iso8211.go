@@ -78,6 +78,8 @@ type LeadRecord struct {
 	FieldTypes map[string]FieldType
 }
 
+// Field is a field within a data record, it holds an array of values 
+// called SubFields.
 type Field struct {
 	Tag       string
 	Length    int
@@ -93,6 +95,8 @@ type DataRecord struct {
 	Fields []Field
 }
 
+// RawFieldHeader is a convenience for loading the on-disk binary FieldType
+// header.
 type RawFieldHeader struct {
 	DataStructure     byte
 	DataType          byte
@@ -102,12 +106,14 @@ type RawFieldHeader struct {
 	EscapeSeq         [3]byte
 }
 
+// SubFieldType holds the Go type, size and tag for each SubField.
 type SubFieldType struct {
 	Kind reflect.Kind
 	Size int
 	Tag  []byte
 }
 
+// FieldType holds the metadata describing fields and subfields.
 type FieldType struct {
 	Tag               string
 	Length            int
