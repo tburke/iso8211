@@ -1,5 +1,24 @@
-// Package iso8211 implements ISO 8211 parsing. It is targeted to NOAA
-// IHO S-57 format vector chart files.
+// Copyright 2015 Thomas Burke <tburke@tb99.com>. All rights reserved.
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file.
+
+// Package iso8211 implements ISO 8211 parsing.
+// It is targeted to NOAA IHO S-57 format vector chart files.
+//
+// ISO 8211 is one of those baroque 1990's era binary file formats. 
+//   file: LeadRecord, DataRecord...
+//   Record : Header, data
+//   LeadRecord : Header, FieldType...
+//   DataRecord : Header, Field...
+//   FieldType : FieldHeader, SubField tags and formats
+//   Field : SubFields
+//
+// References:
+//   http://www.iho.int/iho_pubs/standard/S-57Ed3.1/31Main.pdf
+//   http://sourceforge.net/projects/py-iso8211/
+//   https://www.iso.org/obp/ui/#iso:std:iso-iec:8211:ed-2:v1:en
+//   http://mcmcweb.er.usgs.gov/sdts/SDTS_standard_nov97/p3body.html
+//   http://www.charts.noaa.gov/ENCs/ENCs.shtml
 package iso8211
 
 import (
