@@ -1,6 +1,7 @@
 package iso8211
 
 import (
+	"os"
 	"reflect"
 	"testing"
 )
@@ -33,3 +34,36 @@ func TestFieldTypeFormat(t *testing.T) {
 		}
 	}
 }
+
+func TestS57File(t *testing.T) {
+	f, err := os.Open("testdata/US5MD12M.001")
+	if err != nil {
+		t.Error("Unexpected error: ", err)
+	}
+	defer f.Close()
+	var l LeadRecord
+	if l.Read(f) != nil {
+		t.Error("Error reading the lead record")
+	}
+	var d DataRecord
+	d.Lead = &l
+	if d.Read(f) != nil {
+		t.Error("Error reading Data record 1")
+	}
+	if len(d.Fields) != 3 && d.Fields[0].SubFields[0] != 1 {
+		t.Error("Data record 1 is not what we expected.")
+	}
+	if d.Read(f) != nil {
+		t.Error("Error reading Data record 2")
+	}
+	if len(d.Fields) != 4 && d.Fields[0].SubFields[0] != 2 {
+		t.Error("Data record 2 is not what we expected.")
+	}
+	if len(d.Fields[3].SubFields) != 6 && d.Fields[3].SubFields[4] != 148 {
+		t.Error("Data record 2, Field 4 is not what we expected.", d.Fields[3])
+	}
+	if d.Read(f) == nil {
+		t.Error("Should be at EOF")
+	}
+}
+

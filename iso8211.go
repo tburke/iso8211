@@ -188,7 +188,7 @@ func (data *DataRecord) ReadFields(file io.Reader) error {
 		if data.Lead != nil {
 			field.FieldType = data.Lead.FieldTypes[field.Tag]
 		}
-		field.Read(file)
+		err = field.Read(file)
 		data.Fields[i] = field
 	}
 	return err
