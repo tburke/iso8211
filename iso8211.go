@@ -31,6 +31,8 @@ import (
 	"strconv"
 )
 
+// RawHeader is a convenience for directly loading the on-disk
+// binary Header format.
 type RawHeader struct {
 	Record_length                    [5]byte
 	Interchange_level                byte
@@ -47,12 +49,14 @@ type RawHeader struct {
 	Size_of_field_tag                byte
 }
 
+// DirEntry describes each following Field
 type DirEntry struct {
 	Tag      []byte
 	Length   int
 	Position int
 }
 
+// Header holds the overall layout for a Record.
 type Header struct {
 	Record_length                        uint64
 	Interchange_level                    byte
@@ -67,6 +71,8 @@ type Header struct {
 	Entries                              []DirEntry
 }
 
+// LeadRecord is the first Record in a file. It has metadata for each
+// Field in the file.
 type LeadRecord struct {
 	Header     Header
 	FieldTypes map[string]FieldType
@@ -80,6 +86,7 @@ type Field struct {
 	SubFields []interface{}
 }
 
+// DataRecord contains data for a set of Fields and their SubFields.
 type DataRecord struct {
 	Header Header
 	Lead   *LeadRecord
@@ -117,6 +124,8 @@ type FieldType struct {
 	SubFields          []SubFieldType
 }
 
+// Read loads a binary format RawHeader and its DirEntries into
+// the Header model.
 func (header *Header) Read(file io.Reader) error {
 	var err error
 	var ddr RawHeader
@@ -152,6 +161,7 @@ func (header *Header) Read(file io.Reader) error {
 	return err
 }
 
+// Read loads the LeadRecord Header and the FieldTypes
 func (lead *LeadRecord) Read(file io.Reader) error {
 	var err error
 	err = lead.Header.Read(file)
@@ -236,7 +246,7 @@ func (dir *FieldType) Read(file io.Reader) error {
 /*
 Format parses the ISO-8211 format controls and array descriptors.
 
-Section 7.2.2.1 of the IHO S-57 Publication.
+Based on Section 7.2.2.1 of the IHO S-57 Publication.
 http://www.iho.int/iho_pubs/standard/S-57Ed3.1/31Main.pdf
 
 Array Descriptor and Format Controls. The array descriptor is a ! separated
@@ -303,6 +313,8 @@ func (dir *FieldType) Format() []SubFieldType {
 	return dir.SubFields
 }
 
+// Decode uses the FieldType Format to convert the binary file format
+// SubFields into an array of Go data types.
 func (dir FieldType) Decode(buffer []byte) []interface{} {
 	buf := bytes.NewBuffer(buffer)
 	var values []interface{}
