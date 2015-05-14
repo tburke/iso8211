@@ -36,7 +36,7 @@ import (
 type RawHeader struct {
 	RecordLength                  [5]byte
 	InterchangeLevel              byte
-	LeaderId                      byte
+	LeaderID                      byte
 	InLineCode                    byte
 	Version                       byte
 	ApplicationIndicator          byte
@@ -60,7 +60,7 @@ type DirEntry struct {
 type Header struct {
 	RecordLength                      uint64
 	InterchangeLevel                  byte
-	LeaderId                          byte
+	LeaderID                          byte
 	InLineCode                        byte
 	Version                           byte
 	ApplicationIndicator              byte
@@ -137,7 +137,7 @@ func (header *Header) Read(file io.Reader) error {
 	}
 	header.RecordLength, _ = strconv.ParseUint(string(ddr.RecordLength[:]), 10, 64)
 	header.InterchangeLevel = ddr.InterchangeLevel
-	header.LeaderId = ddr.LeaderId
+	header.LeaderID = ddr.LeaderID
 	header.InLineCode = ddr.InLineCode
 	header.Version = ddr.Version
 	header.ApplicationIndicator = ddr.ApplicationIndicator
@@ -168,8 +168,8 @@ func (lead *LeadRecord) Read(file io.Reader) error {
 	if err != nil {
 		return err
 	}
-	if lead.Header.LeaderId != 'L' {
-		return errors.New("Record is not a Lead record")
+	if lead.Header.LeaderID != 'L' {
+		return errors.New("record is not a Lead record")
 	}
 	err = lead.ReadFields(file)
 	return err
@@ -202,8 +202,8 @@ func (data *DataRecord) Read(file io.Reader) error {
 	if err != nil {
 		return err
 	}
-	if data.Header.LeaderId != 'D' {
-		return errors.New("Record is not a Data record")
+	if data.Header.LeaderID != 'D' {
+		return errors.New("record is not a Data record")
 	}
 	err = data.ReadFields(file)
 	return err
