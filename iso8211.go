@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 type RawHeader struct {
@@ -44,7 +43,7 @@ type Header struct {
 	Application_indicator                byte
 	Field_control_length                 uint64
 	Base_address                         uint64
-	Extended_character_set_indicator     [3]byte
+	Extended_character_set_indicator     []byte
 	Length_size, Position_size, Tag_size int8
 	Entries                              []DirEntry
 }
@@ -68,7 +67,7 @@ type DataRecord struct {
 	Fields []Field
 }
 
-type RawRecordHeader struct {
+type RawFieldHeader struct {
 	Data_structure     byte
 	Data_type          byte
 	Auxiliary_controls [2]byte
@@ -80,7 +79,7 @@ type RawRecordHeader struct {
 type SubFieldType struct {
 	Kind reflect.Kind
 	Size int
-	Tag  string
+	Tag  []byte
 }
 
 type FieldType struct {
@@ -89,13 +88,13 @@ type FieldType struct {
 	Position           int
 	Data_structure     byte
 	Data_type          byte
-	Auxiliary_controls [2]byte
+	Auxiliary_controls []byte
 	Printable_ft       byte
 	Printable_ut       byte
-	Escape_seq         [3]byte
-	Name               string
-	Array_descriptor   string
-	Format_controls    string
+	Escape_seq         []byte
+	Name               []byte
+	Array_descriptor   []byte
+	Format_controls    []byte
 	SubFields          []SubFieldType
 }
 
@@ -116,6 +115,7 @@ func (header *Header) Read(file io.Reader) error {
 	header.Application_indicator = ddr.Application_indicator
 	header.Field_control_length, _ = strconv.ParseUint(string(ddr.Field_control_length[:]), 10, 64)
 	header.Base_address, _ = strconv.ParseUint(string(ddr.Base_address[:]), 10, 64)
+	header.Extended_character_set_indicator = ddr.Extended_character_set_indicator[:]
 	header.Length_size = int8(ddr.Size_of_field_length - '0')
 	header.Position_size = int8(ddr.Size_of_field_position - '0')
 	header.Tag_size = int8(ddr.Size_of_field_tag - '0')
@@ -195,17 +195,17 @@ func (data *DataRecord) ReadFields(file io.Reader) error {
 }
 
 func (dir *FieldType) Read(file io.Reader) error {
-	var field RawRecordHeader
+	var field RawFieldHeader
 	err := binary.Read(file, binary.LittleEndian, &field)
 	dir.Data_structure = field.Data_structure
 	dir.Data_type = field.Data_type
-	copy(field.Auxiliary_controls[:], dir.Auxiliary_controls[:])
+	dir.Auxiliary_controls = field.Auxiliary_controls[:]
 	dir.Printable_ft = field.Printable_ft
 	dir.Printable_ut = field.Printable_ut
-	copy(field.Escape_seq[:], dir.Escape_seq[:])
+	dir.Escape_seq = field.Escape_seq[:]
 	fdata := make([]byte, dir.Length-9)
 	file.Read(fdata)
-	desc := strings.Split(string(fdata[:dir.Length-10]), "\x1f")
+	desc := bytes.Split(fdata[:dir.Length-10], []byte{'\x1f'})
 	dir.Name = desc[0]
 	dir.Array_descriptor = desc[1]
 	if len(desc) > 2 {
@@ -231,7 +231,6 @@ bytes.
 Decriptor *YCOO!XCOO, Format (2b24) is two binary encoded integers. Both are
 int32s, the '2' after the 'b' indicates signed. The * in the descriptor
 indicates that pair is repeated to fill the data field.
-
 */
 func (dir *FieldType) Format() []SubFieldType {
 	if dir.SubFields != nil {
@@ -240,39 +239,42 @@ func (dir *FieldType) Format() []SubFieldType {
 	var re = regexp.MustCompile(`(\d*)(\w+)\(*(\d*)\)*`)
 
 	if len(dir.Format_controls) > 2 {
-		var types []SubFieldType
-		Tags := strings.Split(dir.Array_descriptor, "!")
+		Tags := bytes.Split(dir.Array_descriptor, []byte{'!'})
 		Tagidx := 0
-		for _, a := range re.FindAllStringSubmatch(dir.Format_controls, -1) {
+		types := make([]SubFieldType, len(Tags))
+		for _, a := range re.FindAllSubmatch(dir.Format_controls, -1) {
 			i := 1
 			if len(a[1]) > 0 {
-				i, _ = strconv.Atoi(a[1])
+				i, _ = strconv.Atoi(string(a[1]))
 			}
 			var size int
 			if len(a[3]) > 0 {
-				size, _ = strconv.Atoi(a[3])
+				size, _ = strconv.Atoi(string(a[3]))
 			}
 			for ; i > 0; i-- {
-				switch a[2] {
-				case "A":
-					types = append(types, SubFieldType{reflect.String, size, Tags[Tagidx]})
-				case "I":
-				case "R":
-					types = append(types, SubFieldType{reflect.String, size, Tags[Tagidx]})
-				case "B":
-					types = append(types, SubFieldType{reflect.Array, size / 8, Tags[Tagidx]})
-				case "b21":
-					types = append(types, SubFieldType{reflect.Int8, 1, Tags[Tagidx]})
-				case "b22":
-					types = append(types, SubFieldType{reflect.Int16, 2, Tags[Tagidx]})
-				case "b24":
-					types = append(types, SubFieldType{reflect.Int32, 4, Tags[Tagidx]})
-				case "b11":
-					types = append(types, SubFieldType{reflect.Uint8, 1, Tags[Tagidx]})
-				case "b12":
-					types = append(types, SubFieldType{reflect.Uint16, 2, Tags[Tagidx]})
-				case "b14":
-					types = append(types, SubFieldType{reflect.Uint32, 4, Tags[Tagidx]})
+				switch a[2][0] {
+				case 'A':
+					types[Tagidx] = SubFieldType{reflect.String, size, Tags[Tagidx]}
+				case 'I':
+				case 'R':
+					types[Tagidx] = SubFieldType{reflect.String, size, Tags[Tagidx]}
+				case 'B':
+					types[Tagidx] = SubFieldType{reflect.Array, size / 8, Tags[Tagidx]}
+				case 'b':
+					switch string(a[2][1:]) {
+					case "11":
+						types[Tagidx] = SubFieldType{reflect.Uint8, 1, Tags[Tagidx]}
+					case "12":
+						types[Tagidx] = SubFieldType{reflect.Uint16, 2, Tags[Tagidx]}
+					case "14":
+						types[Tagidx] = SubFieldType{reflect.Uint32, 4, Tags[Tagidx]}
+					case "21":
+						types[Tagidx] = SubFieldType{reflect.Int8, 1, Tags[Tagidx]}
+					case "22":
+						types[Tagidx] = SubFieldType{reflect.Int16, 2, Tags[Tagidx]}
+					case "24":
+						types[Tagidx] = SubFieldType{reflect.Int32, 4, Tags[Tagidx]}
+					}
 				}
 				Tagidx++
 			}

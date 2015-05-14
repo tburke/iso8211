@@ -8,27 +8,27 @@ import (
 
 func TestFieldTypeFormat(t *testing.T) {
 	var f FieldType
-	f.Format_controls = "(A)"
+	f.Format_controls = []byte("(A)")
 	v := f.Format()
-	e := SubFieldType{reflect.String, 0, ""}
-	if len(v) != 1 || v[0] != e {
+	e := SubFieldType{reflect.String, 0, nil}
+	if len(v) != 1 || !reflect.DeepEqual(v[0], e) {
 		t.Error("Expected ", e, ", got ", v)
 	}
-	f.Format_controls = "(b11,2b24,A(3),B(40))"
-	f.Array_descriptor = "A!B!C!D!E"
-	f.SubFields = nil
-	v = f.Format()
+	var f2 FieldType
+	f2.Format_controls = []byte("(b11,2b24,A(3),B(40))")
+	f2.Array_descriptor = []byte("A!B!C!D!E")
+	v = f2.Format()
 	a := []SubFieldType{
-		{reflect.Uint8, 1, "A"},
-		{reflect.Int32, 4, "B"},
-		{reflect.Int32, 4, "C"},
-		{reflect.String, 3, "D"},
-		{reflect.Array, 5, "E"}}
+		{reflect.Uint8, 1, []byte{'A'}},
+		{reflect.Int32, 4, []byte{'B'}},
+		{reflect.Int32, 4, []byte{'C'}},
+		{reflect.String, 3, []byte{'D'}},
+		{reflect.Array, 5, []byte{'E'}}}
 	if len(v) != len(a) {
 		t.Error("Format did not return the expected number of values")
 	} else {
 		for i, o := range v {
-			if o != a[i] {
+			if !reflect.DeepEqual(o, a[i]) {
 				t.Error("At ", i, " Expected ", a[i], ", got ", o)
 			}
 		}
@@ -66,4 +66,3 @@ func TestS57File(t *testing.T) {
 		t.Error("Should be at EOF")
 	}
 }
-
