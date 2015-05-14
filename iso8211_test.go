@@ -13,15 +13,15 @@ import (
 
 func TestFieldTypeFormat(t *testing.T) {
 	var f FieldType
-	f.Format_controls = []byte("(A)")
+	f.FormatControls = []byte("(A)")
 	v := f.Format()
 	e := SubFieldType{reflect.String, 0, nil}
 	if len(v) != 1 || !reflect.DeepEqual(v[0], e) {
 		t.Error("Expected ", e, ", got ", v)
 	}
 	var f2 FieldType
-	f2.Format_controls = []byte("(b11,2b24,A(3),B(40))")
-	f2.Array_descriptor = []byte("A!B!C!D!E")
+	f2.FormatControls = []byte("(b11,2b24,A(3),B(40))")
+	f2.ArrayDescriptor = []byte("A!B!C!D!E")
 	v = f2.Format()
 	a := []SubFieldType{
 		{reflect.Uint8, 1, []byte{'A'}},

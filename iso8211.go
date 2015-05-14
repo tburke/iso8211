@@ -34,19 +34,19 @@ import (
 // RawHeader is a convenience for directly loading the on-disk
 // binary Header format.
 type RawHeader struct {
-	Record_length                    [5]byte
-	Interchange_level                byte
-	Leader_id                        byte
+	RecordLength                    [5]byte
+	InterchangeLevel                byte
+	LeaderId                        byte
 	InLineCode                       byte
 	Version                          byte
-	Application_indicator            byte
-	Field_control_length             [2]byte
-	Base_address                     [5]byte
-	Extended_character_set_indicator [3]byte
-	Size_of_field_length             byte
-	Size_of_field_position           byte
+	ApplicationIndicator            byte
+	FieldControlLength             [2]byte
+	BaseAddress                     [5]byte
+	ExtendedCharacterSetIndicator [3]byte
+	SizeOfFieldLength             byte
+	SizeOfFieldPosition           byte
 	Reserved                         byte
-	Size_of_field_tag                byte
+	SizeOfFieldTag                byte
 }
 
 // DirEntry describes each following Field
@@ -58,16 +58,16 @@ type DirEntry struct {
 
 // Header holds the overall layout for a Record.
 type Header struct {
-	Record_length                        uint64
-	Interchange_level                    byte
-	Leader_id                            byte
+	RecordLength                        uint64
+	InterchangeLevel                    byte
+	LeaderId                            byte
 	InLineCode                           byte
 	Version                              byte
-	Application_indicator                byte
-	Field_control_length                 uint64
-	Base_address                         uint64
-	Extended_character_set_indicator     []byte
-	Length_size, Position_size, Tag_size int8
+	ApplicationIndicator                byte
+	FieldControlLength                 uint64
+	BaseAddress                         uint64
+	ExtendedCharacterSetIndicator     []byte
+	LengthSize, PositionSize, TagSize int8
 	Entries                              []DirEntry
 }
 
@@ -94,12 +94,12 @@ type DataRecord struct {
 }
 
 type RawFieldHeader struct {
-	Data_structure     byte
-	Data_type          byte
-	Auxiliary_controls [2]byte
-	Printable_ft       byte
-	Printable_ut       byte
-	Escape_seq         [3]byte
+	DataStructure     byte
+	DataType          byte
+	AuxiliaryControls [2]byte
+	PrintableFt       byte
+	PrintableUt       byte
+	EscapeSeq         [3]byte
 }
 
 type SubFieldType struct {
@@ -112,15 +112,15 @@ type FieldType struct {
 	Tag                string
 	Length             int
 	Position           int
-	Data_structure     byte
-	Data_type          byte
-	Auxiliary_controls []byte
-	Printable_ft       byte
-	Printable_ut       byte
-	Escape_seq         []byte
+	DataStructure     byte
+	DataType          byte
+	AuxiliaryControls []byte
+	PrintableFt       byte
+	PrintableUt       byte
+	EscapeSeq         []byte
 	Name               []byte
-	Array_descriptor   []byte
-	Format_controls    []byte
+	ArrayDescriptor   []byte
+	FormatControls    []byte
 	SubFields          []SubFieldType
 }
 
@@ -135,28 +135,28 @@ func (header *Header) Read(file io.Reader) error {
 	if err != nil {
 		return err
 	}
-	header.Record_length, _ = strconv.ParseUint(string(ddr.Record_length[:]), 10, 64)
-	header.Interchange_level = ddr.Interchange_level
-	header.Leader_id = ddr.Leader_id
+	header.RecordLength, _ = strconv.ParseUint(string(ddr.RecordLength[:]), 10, 64)
+	header.InterchangeLevel = ddr.InterchangeLevel
+	header.LeaderId = ddr.LeaderId
 	header.InLineCode = ddr.InLineCode
 	header.Version = ddr.Version
-	header.Application_indicator = ddr.Application_indicator
-	header.Field_control_length, _ = strconv.ParseUint(string(ddr.Field_control_length[:]), 10, 64)
-	header.Base_address, _ = strconv.ParseUint(string(ddr.Base_address[:]), 10, 64)
-	header.Extended_character_set_indicator = ddr.Extended_character_set_indicator[:]
-	header.Length_size = int8(ddr.Size_of_field_length - '0')
-	header.Position_size = int8(ddr.Size_of_field_position - '0')
-	header.Tag_size = int8(ddr.Size_of_field_tag - '0')
+	header.ApplicationIndicator = ddr.ApplicationIndicator
+	header.FieldControlLength, _ = strconv.ParseUint(string(ddr.FieldControlLength[:]), 10, 64)
+	header.BaseAddress, _ = strconv.ParseUint(string(ddr.BaseAddress[:]), 10, 64)
+	header.ExtendedCharacterSetIndicator = ddr.ExtendedCharacterSetIndicator[:]
+	header.LengthSize = int8(ddr.SizeOfFieldLength - '0')
+	header.PositionSize = int8(ddr.SizeOfFieldPosition - '0')
+	header.TagSize = int8(ddr.SizeOfFieldTag - '0')
 	// Read the directory
-	entries := (header.Base_address - 1 - ddrSize) / uint64(header.Length_size+header.Position_size+header.Tag_size)
+	entries := (header.BaseAddress - 1 - ddrSize) / uint64(header.LengthSize+header.PositionSize+header.TagSize)
 	header.Entries = make([]DirEntry, entries)
-	dir := make([]byte, header.Base_address-ddrSize)
+	dir := make([]byte, header.BaseAddress-ddrSize)
 	file.Read(dir)
 	buf := bytes.NewBuffer(dir)
 	for idx := uint64(0); idx < entries; idx++ {
-		header.Entries[idx].Tag = buf.Next(int(header.Tag_size))
-		header.Entries[idx].Length, _ = strconv.Atoi(string(buf.Next(int(header.Length_size))[:]))
-		header.Entries[idx].Position, _ = strconv.Atoi(string(buf.Next(int(header.Position_size))[:]))
+		header.Entries[idx].Tag = buf.Next(int(header.TagSize))
+		header.Entries[idx].Length, _ = strconv.Atoi(string(buf.Next(int(header.LengthSize))[:]))
+		header.Entries[idx].Position, _ = strconv.Atoi(string(buf.Next(int(header.PositionSize))[:]))
 	}
 	return err
 }
@@ -168,7 +168,7 @@ func (lead *LeadRecord) Read(file io.Reader) error {
 	if err != nil {
 		return err
 	}
-	if lead.Header.Leader_id != 'L' {
+	if lead.Header.LeaderId != 'L' {
 		return errors.New("Record is not a Lead record")
 	}
 	err = lead.ReadFields(file)
@@ -202,7 +202,7 @@ func (data *DataRecord) Read(file io.Reader) error {
 	if err != nil {
 		return err
 	}
-	if data.Header.Leader_id != 'D' {
+	if data.Header.LeaderId != 'D' {
 		return errors.New("Record is not a Data record")
 	}
 	err = data.ReadFields(file)
@@ -226,19 +226,19 @@ func (data *DataRecord) ReadFields(file io.Reader) error {
 func (dir *FieldType) Read(file io.Reader) error {
 	var field RawFieldHeader
 	err := binary.Read(file, binary.LittleEndian, &field)
-	dir.Data_structure = field.Data_structure
-	dir.Data_type = field.Data_type
-	dir.Auxiliary_controls = field.Auxiliary_controls[:]
-	dir.Printable_ft = field.Printable_ft
-	dir.Printable_ut = field.Printable_ut
-	dir.Escape_seq = field.Escape_seq[:]
+	dir.DataStructure = field.DataStructure
+	dir.DataType = field.DataType
+	dir.AuxiliaryControls = field.AuxiliaryControls[:]
+	dir.PrintableFt = field.PrintableFt
+	dir.PrintableUt = field.PrintableUt
+	dir.EscapeSeq = field.EscapeSeq[:]
 	fdata := make([]byte, dir.Length-9)
 	file.Read(fdata)
 	desc := bytes.Split(fdata[:dir.Length-10], []byte{'\x1f'})
 	dir.Name = desc[0]
-	dir.Array_descriptor = desc[1]
+	dir.ArrayDescriptor = desc[1]
 	if len(desc) > 2 {
-		dir.Format_controls = desc[2]
+		dir.FormatControls = desc[2]
 	}
 	return err
 }
@@ -267,11 +267,11 @@ func (dir *FieldType) Format() []SubFieldType {
 	}
 	var re = regexp.MustCompile(`(\d*)(\w+)\(*(\d*)\)*`)
 
-	if len(dir.Format_controls) > 2 {
-		Tags := bytes.Split(dir.Array_descriptor, []byte{'!'})
+	if len(dir.FormatControls) > 2 {
+		Tags := bytes.Split(dir.ArrayDescriptor, []byte{'!'})
 		Tagidx := 0
 		types := make([]SubFieldType, len(Tags))
-		for _, a := range re.FindAllSubmatch(dir.Format_controls, -1) {
+		for _, a := range re.FindAllSubmatch(dir.FormatControls, -1) {
 			i := 1
 			if len(a[1]) > 0 {
 				i, _ = strconv.Atoi(string(a[1]))
