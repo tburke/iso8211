@@ -167,6 +167,9 @@ func (field *Field) Read(file io.Reader) error {
 func (data *DataRecord) Read(file io.Reader) error {
 	var err error
 	err = data.Header.Read(file)
+	if err != nil {
+		return err
+	}
 	if data.Header.Leader_id != 'D' {
 		return errors.New("Record is not a Data record")
 	}

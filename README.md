@@ -7,4 +7,5 @@ This parser was derived from the IHO S-57 documentation, the py-iso8211 library 
 * http://sourceforge.net/projects/py-iso8211/
 * https://www.iso.org/obp/ui/#iso:std:iso-iec:8211:ed-2:v1:en
 * http://mcmcweb.er.usgs.gov/sdts/SDTS_standard_nov97/p3body.html
+* http://www.charts.noaa.gov/ENCs/ENCs.shtml
 
