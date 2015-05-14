@@ -73,11 +73,18 @@ func TestS57File(t *testing.T) {
 }
 
 func Example() {
+	f, err := os.Open("testdata/US5MD12M.001")
+	if err != nil {
+		fmt.Println("No file. ", err)
+	}
 	var l LeadRecord
-	l.Read(os.Stdin)
+	l.Read(f)
 	var d DataRecord
 	d.Lead = &l
-	for d.Read(os.Stdin) == nil {
-		fmt.Printf("Rec: %d\n%v\n", d.Fields[0].SubFields[0], d)
+	for d.Read(f) == nil {
+		fmt.Printf("Rec: %d\n", d.Fields[0].SubFields[0])
 	}
+	// Output:
+	// Rec: 1
+	// Rec: 2
 }
