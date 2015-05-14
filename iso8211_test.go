@@ -5,6 +5,7 @@
 package iso8211
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
@@ -68,5 +69,15 @@ func TestS57File(t *testing.T) {
 	}
 	if d.Read(f) == nil {
 		t.Error("Should be at EOF")
+	}
+}
+
+func Example() {
+	var l LeadRecord
+	l.Read(os.Stdin)
+	var d DataRecord
+	d.Lead = &l
+	for d.Read(os.Stdin) == nil {
+		fmt.Printf("Rec: %d\n%v\n", d.Fields[0].SubFields[0], d)
 	}
 }
