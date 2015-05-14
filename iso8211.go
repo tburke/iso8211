@@ -34,18 +34,18 @@ import (
 // RawHeader is a convenience for directly loading the on-disk
 // binary Header format.
 type RawHeader struct {
-	RecordLength                    [5]byte
-	InterchangeLevel                byte
-	LeaderId                        byte
-	InLineCode                       byte
-	Version                          byte
-	ApplicationIndicator            byte
-	FieldControlLength             [2]byte
-	BaseAddress                     [5]byte
+	RecordLength                  [5]byte
+	InterchangeLevel              byte
+	LeaderId                      byte
+	InLineCode                    byte
+	Version                       byte
+	ApplicationIndicator          byte
+	FieldControlLength            [2]byte
+	BaseAddress                   [5]byte
 	ExtendedCharacterSetIndicator [3]byte
 	SizeOfFieldLength             byte
 	SizeOfFieldPosition           byte
-	Reserved                         byte
+	Reserved                      byte
 	SizeOfFieldTag                byte
 }
 
@@ -58,17 +58,17 @@ type DirEntry struct {
 
 // Header holds the overall layout for a Record.
 type Header struct {
-	RecordLength                        uint64
-	InterchangeLevel                    byte
-	LeaderId                            byte
-	InLineCode                           byte
-	Version                              byte
-	ApplicationIndicator                byte
-	FieldControlLength                 uint64
-	BaseAddress                         uint64
+	RecordLength                      uint64
+	InterchangeLevel                  byte
+	LeaderId                          byte
+	InLineCode                        byte
+	Version                           byte
+	ApplicationIndicator              byte
+	FieldControlLength                uint64
+	BaseAddress                       uint64
 	ExtendedCharacterSetIndicator     []byte
 	LengthSize, PositionSize, TagSize int8
-	Entries                              []DirEntry
+	Entries                           []DirEntry
 }
 
 // LeadRecord is the first Record in a file. It has metadata for each
@@ -109,19 +109,19 @@ type SubFieldType struct {
 }
 
 type FieldType struct {
-	Tag                string
-	Length             int
-	Position           int
+	Tag               string
+	Length            int
+	Position          int
 	DataStructure     byte
 	DataType          byte
 	AuxiliaryControls []byte
 	PrintableFt       byte
 	PrintableUt       byte
 	EscapeSeq         []byte
-	Name               []byte
+	Name              []byte
 	ArrayDescriptor   []byte
 	FormatControls    []byte
-	SubFields          []SubFieldType
+	SubFields         []SubFieldType
 }
 
 // Read loads a binary format RawHeader and its DirEntries into
