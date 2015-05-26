@@ -291,6 +291,7 @@ func (dir *FieldType) Format() []SubFieldType {
 				case 'A':
 					types[Tagidx] = SubFieldType{reflect.String, size, Tags[Tagidx]}
 				case 'I':
+					types[Tagidx] = SubFieldType{reflect.String, size, Tags[Tagidx]}
 				case 'R':
 					types[Tagidx] = SubFieldType{reflect.String, size, Tags[Tagidx]}
 				case 'B':
